@@ -4,6 +4,10 @@
 #include <tchar.h>
 #include <stdlib.h>
 #include <string>
+//#include <ifstream>
+//#include <ofstream>
+#include <fstream>
+#include "Fps.h"
 
 using namespace std;
 
@@ -17,10 +21,12 @@ private:
 	int CELL_COUNT;
 	int BOMB_COUNT;
 public:
-	Mine_clearance();
+	Mine_clearance() { ; };
 	void TcharToChar(const TCHAR*, char*);
 	void CharToTchar(const char*, TCHAR*);
-	void draw_start();
+	wchar_t* stringToTCHAR(const char*);
+	char* TCHARToString(LPCTSTR);
+	int draw_start();
 	void draw_game();
 	void draw_gameover();
 	void start_game();

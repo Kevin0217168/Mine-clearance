@@ -1,4 +1,5 @@
 #include <iostream>
+#include "Mine_clearance.h"
 
 
 using namespace std;
@@ -12,5 +13,9 @@ int main(void)
 	//char a[10];
 	//TcharToChar(s, a);
 	//cout << atoi(a) + 1 << endl;
+
+	Mine_clearance game;
+	cout << game.draw_start();
+
 	return 0;
 }
