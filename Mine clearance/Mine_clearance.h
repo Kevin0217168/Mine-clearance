@@ -14,18 +14,21 @@ using namespace std;
 class Mine_clearance
 {
 private: 
-	int HIGHT;
-	int WIDTH;
-	int CELL;
-	int CELL_COUNT;
-	int BOMB_COUNT;
+	int HIGHT = NULL;
+	int WIDTH = NULL;
+	int CELL = NULL;
+	int CELL_COUNT = NULL;
+	int CELL_COUNT_WIDTH = NULL;
+	int CELL_COUNT_HIGHT = NULL;
+	int BOMB_COUNT = NULL;
 public:
-	Mine_clearance() { ; };
+	Mine_clearance();
 	void TcharToChar(const TCHAR*, char*);
 	void CharToTchar(const char*, TCHAR*);
 	wchar_t* stringToTCHAR(const char*);
 	char* TCHARToString(LPCTSTR);
 	int draw_start();
+	void setting(int);
 	void draw_game();
 	void draw_gameover();
 	void start_game();

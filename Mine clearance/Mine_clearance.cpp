@@ -1,5 +1,11 @@
 #include "Mine_clearance.h"
 
+Mine_clearance::Mine_clearance()
+{
+
+}
+
+
 //将TCHAR转为char   
 //*tchar是TCHAR类型指针，*_char是char类型指针   
 void Mine_clearance::TcharToChar(const TCHAR* tchar, char* _char)
@@ -188,4 +194,39 @@ int Mine_clearance::draw_start()
 	delete fps;
 	closegraph();
 	return target;
+}
+
+void Mine_clearance::setting(int target)
+{
+	switch (target)
+	{
+	case 1:
+		this->CELL_COUNT_WIDTH = 10;
+		this->CELL_COUNT_HIGHT = 10;
+		this->CELL_COUNT = 100;
+		this->BOMB_COUNT = 10;
+		this->CELL = 20;
+		break;
+	case 2:
+		this->CELL_COUNT_WIDTH = 16;
+		this->CELL_COUNT_HIGHT = 16;
+		this->CELL_COUNT = 256;
+		this->BOMB_COUNT = 40;
+		this->CELL = 20;
+		break;
+	case 3:
+		this->CELL_COUNT_WIDTH = 30;
+		this->CELL_COUNT_HIGHT = 25;
+		this->CELL_COUNT = 750;
+		this->BOMB_COUNT = 99;
+		this->CELL = 15;
+		break;
+	default:
+		// 此处显示游戏说明
+		// ...巴拉巴拉
+		// 然后返回
+		draw_start();
+	}
+	this->HIGHT = 50 + this->CELL_COUNT * this->CELL + 10;
+	this->WIDTH = 10 + this->CELL_COUNT * this->CELL;
 }

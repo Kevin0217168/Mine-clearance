@@ -15,7 +15,7 @@ int main(void)
 	//cout << atoi(a) + 1 << endl;
 
 	Mine_clearance game;
-	cout << game.draw_start();
+	game.setting(game.draw_start());
 
 	return 0;
 }
