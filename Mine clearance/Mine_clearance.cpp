@@ -81,21 +81,13 @@ int Mine_clearance::draw_start()
 	// 设置背景色
 	setbkcolor(RGB(206, 214, 224));
 
-	// 设置难度选项
-	string difficult_list[5] = { " 上次选择",
-		" 初级(10*10) [10颗地雷]",
-		" 中级(16*16) [40颗地雷]",
-		" 高级(30*25) [99颗地雷]",
-		" 版本说明"
-	};
-
 	if (chage == NULL)
 	{
-		difficult_list[0] += "暂无";
+		this->difficult_list[0] += "暂无";
 	}
 	else 
 	{
-		difficult_list[0] += difficult_list[chage].substr(0,12);
+		this->difficult_list[0] += this->difficult_list[chage].substr(0,12);
 	}
 
 	static RECT title_rect = { 80, 50, 420, 130 };
@@ -135,12 +127,12 @@ int Mine_clearance::draw_start()
 			if (i == target)
 			{
 				settextcolor(RGB(55, 66, 250));
-				drawtext(AnsiCharToWide((char*)(string(">>") + difficult_list[i]).data()), &draw_choose, DT_LEFT);
+				drawtext(AnsiCharToWide((char*)(string(">>") + this->difficult_list[i]).data()), &draw_choose, DT_LEFT);
 			}
 			else 
 			{
 				settextcolor(RGB(112, 161, 255));
-				drawtext(AnsiCharToWide((char*)(string("  ") + difficult_list[i]).data()), &draw_choose, DT_LEFT);
+				drawtext(AnsiCharToWide((char*)(string("  ") + this->difficult_list[i]).data()), &draw_choose, DT_LEFT);
 			}
 			draw_choose = choose_rect;
 		}
@@ -205,21 +197,21 @@ void Mine_clearance::setting(int target)
 		this->CELL_COUNT_HIGHT = 10;
 		this->CELL_COUNT = 100;
 		this->BOMB_COUNT = 10;
-		this->CELL = 20;
+		this->CELL = 30;
 		break;
 	case 2:
 		this->CELL_COUNT_WIDTH = 16;
 		this->CELL_COUNT_HIGHT = 16;
 		this->CELL_COUNT = 256;
 		this->BOMB_COUNT = 40;
-		this->CELL = 20;
+		this->CELL = 25;
 		break;
 	case 3:
 		this->CELL_COUNT_WIDTH = 30;
 		this->CELL_COUNT_HIGHT = 25;
 		this->CELL_COUNT = 750;
 		this->BOMB_COUNT = 99;
-		this->CELL = 15;
+		this->CELL = 20;
 		break;
 	default:
 		// 此处显示游戏说明
@@ -227,6 +219,52 @@ void Mine_clearance::setting(int target)
 		// 然后返回
 		draw_start();
 	}
-	this->HIGHT = 50 + this->CELL_COUNT * this->CELL + 10;
-	this->WIDTH = 10 + this->CELL_COUNT * this->CELL;
+	this->HIGHT = 60 + this->CELL_COUNT_HIGHT * this->CELL + 10;
+	this->WIDTH = 10 + this->CELL_COUNT_WIDTH * this->CELL;
+}
+
+void Mine_clearance::draw_game(time_t start_seconds)
+{
+	BeginBatchDraw();
+
+	// 绘制背景
+	setfillcolor(RGB(206, 214, 224));
+	solidrectangle(0, 0, this->WIDTH, this->HIGHT);
+
+	// 绘制游戏区域框
+	setfillcolor(BLACK);
+	rectangle(10, 60, this->WIDTH - 10, this->HIGHT - 10);
+
+	// 绘制游戏时间
+	setfillcolor(BLACK);
+	settextstyle(30, 0, _T("微软雅黑"));
+	static RECT time_rect = { 20, 10, (this->WIDTH / 2) - 10, 40 };
+	long int sub_scoends = time(NULL) - start_seconds;
+	string minutes = to_string((int)(sub_scoends / 60));
+	string seconds = to_string(sub_scoends % 60);
+	drawtext(AnsiCharToWide((char*)(string("时间: ") + minutes + string(":") + seconds).data()), &time_rect, DT_LEFT);
+
+	// 绘制游戏剩余雷数
+
+
+	EndBatchDraw();
+}
+
+void Mine_clearance::start_game()
+{
+	time_t start_seconds;
+	start_seconds = time(NULL);
+	// 初始化绘图窗口
+	initgraph(this->WIDTH, this->HIGHT, SHOWCONSOLE);
+
+	// 设置背景色
+	setbkcolor(RGB(206, 214, 224));
+
+	fps_limit* fps = new fps_limit(60);
+	while (true) 
+	{
+		draw_game(start_seconds);
+		fps->delay();
+	}
+	delete fps;
 }

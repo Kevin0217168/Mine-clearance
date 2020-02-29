@@ -16,6 +16,7 @@ int main(void)
 
 	Mine_clearance game;
 	game.setting(game.draw_start());
+	game.start_game();
 
 	return 0;
 }
