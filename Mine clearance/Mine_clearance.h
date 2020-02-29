@@ -4,12 +4,11 @@
 #include <tchar.h>
 #include <stdlib.h>
 #include <string>
-//#include <ifstream>
-//#include <ofstream>
 #include <fstream>
 #include "Fps.h"
 
 using namespace std;
+
 
 #pragma once
 class Mine_clearance

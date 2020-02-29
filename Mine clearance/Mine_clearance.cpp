@@ -52,18 +52,15 @@ wchar_t* AnsiCharToWide(char* pChar)
 
 int Mine_clearance::draw_start()
 {
-	//// 文件操作，打开缓存文件
-	//FILE* fp;
-	//fp = fopen("cache.txt", "r");
-	//if (fp != NULL) 
-	//{
-	//	// 文件打开成功
-	//}
-	//else 
-	//{
-	//	// 文件打开失败
-
-	//}
+	int chage = NULL;
+	// 文件操作，打开缓存文件
+	ifstream inFile("chage.dll", ios::in);
+	if (inFile)
+	{
+		// 文件打开成功
+		// 读取上次选择信息
+		inFile >> chage;
+	}
 
 	// 初始化绘图窗口
 	initgraph(500, 540, SHOWCONSOLE);
@@ -79,12 +76,21 @@ int Mine_clearance::draw_start()
 	setbkcolor(RGB(206, 214, 224));
 
 	// 设置难度选项
-	string difficult_list[5] = { " 上次选择 ",
+	string difficult_list[5] = { " 上次选择",
 		" 初级(10*10) [10颗地雷]",
 		" 中级(16*16) [40颗地雷]",
 		" 高级(30*25) [99颗地雷]",
 		" 版本说明"
 	};
+
+	if (chage == NULL)
+	{
+		difficult_list[0] += "暂无";
+	}
+	else 
+	{
+		difficult_list[0] += difficult_list[chage].substr(0,12);
+	}
 
 	static RECT title_rect = { 80, 50, 420, 130 };
 	static RECT difficult_rect = { 100, 160, 400,200 };
@@ -93,9 +99,9 @@ int Mine_clearance::draw_start()
 
 	fps_limit* fps = new fps_limit(60);
 	int ch;
-	int target = 0;
 	RECT draw_choose = choose_rect;
 	string title;
+	int target = 0;
 	BeginBatchDraw();
 	while (true) {
 		// 背景
@@ -149,7 +155,6 @@ int Mine_clearance::draw_start()
 				{
 					target -= 1;
 				}
-				
 			}
 			// 下：80，选项下翻
 			else if (ch == 80) {
@@ -161,13 +166,25 @@ int Mine_clearance::draw_start()
 			// 空格键：32，确定
 			else if (ch == 32)
 			{
-				break;
+				if (!(target == 0 && chage == NULL)) 
+				{
+					break;
+				}
 			}
 		}
 		FlushBatchDraw();
 		fps->delay();
 	}
 	EndBatchDraw();
+	if (target == 0)
+	{
+		target = chage;
+	}
+	ofstream outfile("chage.dll", ios::out);
+	if (outfile) 
+	{
+		outfile << target;
+	}
 	delete fps;
 	closegraph();
 	return target;
