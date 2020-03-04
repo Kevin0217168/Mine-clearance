@@ -269,6 +269,56 @@ void Mine_clearance::draw_game(time_t start_seconds, int lei_count, vector<vecto
 	EndBatchDraw();
 }
 
+inline bool Mine_clearance::if_pos_in_cell(int x, int y) {
+	if (x > 10 && x < this->WIDTH - 10) {
+		if (y > 60 && y < this->HIGHT - 10) {
+			return true;
+		}
+	}
+	return false;
+}
+
+inline Mine_clearance::Cell* Mine_clearance::choose(vector<vector<Cell>>* map, int x, int y) {
+	// 每行查找
+	int max = map->size()-1;
+	int min = 0;
+	int index;
+	while (true) {
+		index = (int)((max + min) / 2);
+		if ((*map)[index][0].pos[1] <= y && (*map)[index][0].pos[1] + this->CELL > y) {
+			break;
+		}
+		else if ((*map)[index][0].pos[1] > y) {
+			max = index - 1;
+		}
+		else {
+			min = index + 1;
+		}
+	}
+	// 每列查找
+	max = (*map)[index].size() - 1;
+	min = 0;
+	int x_index = 0;
+	while (true) {
+		x_index = (int)((max + min) / 2);
+		if ((*map)[index][x_index].pos[0] <= x && (*map)[index][x_index].pos[0] + this->CELL > x) {
+			return &(*map)[index][x_index];
+		}
+		else if ((*map)[index][x_index].pos[0] > x) {
+			max = x_index - 1;
+		}
+		else {
+			min = x_index + 1;
+		}
+	}
+}
+
+void Mine_clearance::init_Bomb(vector<vector<Cell>>* map, Cell* paichu) {
+	/*for (vector<vector<Cell>>::iterator y_it = map->begin(); y_it < map->size(); ++y_it) {
+		for ()
+	}*/
+}
+
 void Mine_clearance::start_game()
 {
 	time_t start_seconds;
@@ -292,11 +342,41 @@ void Mine_clearance::start_game()
 		}
 	}
 
+	// 游戏主循环
 	int lei_count = this->BOMB_COUNT;
-	fps_limit* fps = new fps_limit(60);
-	while (true) 
+	fps_limit* fps = new fps_limit(200);
+	// 清空鼠标消息缓冲
+	FlushMouseMsgBuffer();
+	while (true)
 	{
 		draw_game(start_seconds, lei_count, cell_map);
+
+		// 鼠标事件检测
+		if (MouseHit()) 
+		{
+			// 获取鼠标消息
+			MOUSEMSG msg = GetMouseMsg();
+			// 检测是否在方格范围内
+			if (if_pos_in_cell(msg.x, msg.y))
+			{
+				Cell* cell = choose(cell_map, msg.x, msg.y);
+				// 检测是否左键单击
+				if (msg.uMsg == WM_LBUTTONDOWN == cell->zhuangtai == 0)
+				{
+					cell->zhuangtai = 1;
+				}
+				// 检测是否左键双击
+				if (msg.uMsg == WM_LBUTTONDBLCLK && cell->zhuangtai == 1) {
+					cout << "double click!" << endl;
+				}
+				// 检测是否按下右键
+				else if (msg.mkRButton) {
+
+				}
+			}
+			
+		}
+
 		fps->delay();
 	}
 	delete fps;

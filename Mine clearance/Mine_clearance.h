@@ -35,7 +35,7 @@ private:
 	{
 		// 方格的行和列坐标
 		int pos[2];
-		// 方格的状态，0:未打开, 1:已打开
+		// 方格的状态，0:未打开, 1:已打开, 3:插旗, 4:疑问
 		int zhuangtai = 0;
 		// 是否为雷，0：不为雷，1：为雷
 		int if_lei = 0;
@@ -48,6 +48,9 @@ public:
 	void CharToTchar(const char*, TCHAR*);
 	wchar_t* stringToTCHAR(const char*);
 	char* TCHARToString(LPCTSTR);
+	inline bool if_pos_in_cell(int x, int y);
+	inline Cell* choose(vector<vector<Cell>>* map, int x, int y);
+	void init_Bomb(vector<vector<Cell>>* map, Cell* paichu);
 	int draw_start();
 	void setting(int);
 	void draw_game(time_t, int, vector<vector<Cell>>*);
