@@ -2,7 +2,6 @@
 
 Mine_clearance::Mine_clearance()
 {
-
 }
 
 
@@ -74,7 +73,7 @@ int Mine_clearance::draw_start()
 	HWND hWnd = GetHWnd();
 	// 使用 API 函数修改窗口名称
 	char s[] = "Mine clearance--Difficult to choose";
-	TCHAR a[35];
+	TCHAR a[36];
 	CharToTchar(s, a);
 	SetWindowText(hWnd, a);
 
@@ -220,10 +219,10 @@ void Mine_clearance::setting(int target)
 		draw_start();
 	}
 	this->HIGHT = 60 + this->CELL_COUNT_HIGHT * this->CELL + 10;
-	this->WIDTH = 10 + this->CELL_COUNT_WIDTH * this->CELL;
+	this->WIDTH = 20 + this->CELL_COUNT_WIDTH * this->CELL;
 }
 
-void Mine_clearance::draw_game(time_t start_seconds)
+void Mine_clearance::draw_game(time_t start_seconds, int lei_count, vector<vector<Cell>>* cell_map)
 {
 	BeginBatchDraw();
 
@@ -242,11 +241,31 @@ void Mine_clearance::draw_game(time_t start_seconds)
 	long int sub_scoends = time(NULL) - start_seconds;
 	string minutes = to_string((int)(sub_scoends / 60));
 	string seconds = to_string(sub_scoends % 60);
-	drawtext(AnsiCharToWide((char*)(string("时间: ") + minutes + string(":") + seconds).data()), &time_rect, DT_LEFT);
+	drawtext(AnsiCharToWide((char*)(string("时间: ") + minutes + string(" : ") + seconds).data()), &time_rect, DT_LEFT);
 
 	// 绘制游戏剩余雷数
+	static RECT lei_rect = { (this->WIDTH / 2) + 10, 10, this->WIDTH - 20, 40 };
+	drawtext(AnsiCharToWide((char*)(string("剩余雷数: ") + to_string(lei_count)).data()), &lei_rect, DT_RIGHT);
 
-
+	// 绘制游戏地图
+	setlinestyle(PS_SOLID | PS_JOIN_BEVEL, 1);
+	for (vector<vector<Cell>>::iterator y_it = cell_map->begin(); y_it < cell_map->end(); ++y_it)
+	{
+		for (vector<Cell>::iterator x_it = y_it->begin(); x_it < y_it->end(); ++x_it) 
+		{
+			if (x_it->zhuangtai)
+			{
+				// 设置已打开填充色
+				setfillcolor(RGB(223, 228, 234));
+			}
+			else 
+			{
+				// 设置未打开填充色
+				setfillcolor(RGB(55, 66, 250));
+			}
+			fillrectangle(x_it->pos[0], x_it->pos[1], x_it->pos[0] + this->CELL, x_it->pos[1] + this->CELL);
+		}
+	}
 	EndBatchDraw();
 }
 
@@ -260,10 +279,24 @@ void Mine_clearance::start_game()
 	// 设置背景色
 	setbkcolor(RGB(206, 214, 224));
 
+	// 构建游戏地图
+	vector<vector<Cell>>* cell_map = new vector<vector<Cell>>(this->CELL_COUNT_HIGHT, vector<Cell>(this->CELL_COUNT_WIDTH));
+	cout << sizeof(*cell_map) << endl;
+	// 初始化游戏地图
+	for (int y = 0; y < this->CELL_COUNT_HIGHT; y++) 
+	{
+		for (int x = 0; x < this->CELL_COUNT_WIDTH; x++) 
+		{
+			(*cell_map)[y][x].pos[0] = 10 + this->CELL * x;
+			(*cell_map)[y][x].pos[1] = 60 + this->CELL * y;
+		}
+	}
+
+	int lei_count = this->BOMB_COUNT;
 	fps_limit* fps = new fps_limit(60);
 	while (true) 
 	{
-		draw_game(start_seconds);
+		draw_game(start_seconds, lei_count, cell_map);
 		fps->delay();
 	}
 	delete fps;
