@@ -34,13 +34,7 @@ wchar_t* Mine_clearance::stringToTCHAR(const char* buffer)
 	MultiByteToWideChar(CP_ACP, 0, (const char*)buffer, int(len), wBuf, int(wlen));
 	return wBuf;
 }
-//char* Mine_clearance::TCHARToString(LPCTSTR lpString)
-//{
-//	UINT len = wcslen(lpString) * 2;
-//	char* buf = (char*)malloc(len);
-//	UINT i = wcstombs(buf, lpString, len);
-//	return buf;
-//}
+
 wchar_t* AnsiCharToWide(char* pChar)
 {
 	if (!pChar) return NULL;
@@ -235,7 +229,7 @@ void Mine_clearance::draw_game(time_t start_seconds, int lei_count, vector<vecto
 	rectangle(10, 60, this->WIDTH - 10, this->HIGHT - 10);
 
 	// 绘制游戏时间
-	setfillcolor(BLACK);
+	settextcolor(BLACK);
 	settextstyle(30, 0, _T("微软雅黑"));
 	static RECT time_rect = { 20, 10, (this->WIDTH / 2) - 10, 40 };
 	long int sub_scoends = time(NULL) - start_seconds;
@@ -255,8 +249,12 @@ void Mine_clearance::draw_game(time_t start_seconds, int lei_count, vector<vecto
 		{
 			if (x_it->zhuangtai)
 			{
-				// 设置已打开填充色
-				setfillcolor(RGB(223, 228, 234));
+				if (x_it->if_lei) {
+					setfillcolor(RED);
+				}else{
+					// 设置已打开填充色
+					setfillcolor(RGB(223, 228, 234));
+				}
 			}
 			else 
 			{
@@ -264,6 +262,18 @@ void Mine_clearance::draw_game(time_t start_seconds, int lei_count, vector<vecto
 				setfillcolor(RGB(55, 66, 250));
 			}
 			fillrectangle(x_it->pos[0], x_it->pos[1], x_it->pos[0] + this->CELL, x_it->pos[1] + this->CELL);
+			// 绘制周围雷数量
+			if (x_it->zhuangtai && x_it->num)
+			{
+				// 设置背景色
+				setbkcolor(RGB(223, 228, 234));
+				settextcolor(BLUE);
+				settextstyle(this->CELL / 2 + 8, 0, _T("微软雅黑"));
+				TCHAR s[2];
+				CharToTchar(to_string(x_it->num).data(), s);
+				RECT num_rect = { x_it->pos[0] + 2, x_it->pos[1] + 2, x_it->pos[0] + this->CELL - 2, x_it->pos[1] + this->CELL - 2 };
+				drawtext(s, &num_rect, DT_CENTER);
+			}
 		}
 	}
 	EndBatchDraw();
@@ -313,10 +323,91 @@ inline Mine_clearance::Cell* Mine_clearance::choose(vector<vector<Cell>>* map, i
 	}
 }
 
+// 生成从MIX到MIN的随机数
+int Mine_clearance::randint(int min, int max)
+{
+	return (rand() % (max - min + 1)) + min;
+}
+
+// 洗牌算法
+void Mine_clearance::shuffle(vector<int>* arr) {
+	int m = arr->size(), t, i;
+	while (m) {
+		i = randint(0, m--);
+		t = (*arr)[m];
+		(*arr)[m] = (*arr)[i];
+		(*arr)[i] = t;
+	}
+}
+
+// 初始化雷区
 void Mine_clearance::init_Bomb(vector<vector<Cell>>* map, Cell* paichu) {
-	/*for (vector<vector<Cell>>::iterator y_it = map->begin(); y_it < map->size(); ++y_it) {
-		for ()
-	}*/
+	vector<int>* bomb_list = new vector<int>(this->CELL_COUNT_HIGHT * this->CELL_COUNT_WIDTH);
+	for (int index = 0; index < this->BOMB_COUNT; index++) {
+		(*bomb_list)[index] = 1;
+	}
+	shuffle(bomb_list);
+	for (int y = 0; y < map->size(); y++) {
+		for (int x = 0; x < (*map)[y].size(); x++) {
+			if ((*bomb_list)[y * this->CELL_COUNT_WIDTH + x]) {
+				(*map)[y][x].if_lei = (*bomb_list)[y * this->CELL_COUNT_WIDTH + x];
+			}
+		}
+	}
+	delete bomb_list;
+	if (paichu->if_lei) {
+		int x, y;
+		do {
+			x = randint(0, this->CELL_COUNT_WIDTH);
+			y = randint(0, this->CELL_COUNT_HIGHT);
+		} while ((*map)[y][x].if_lei);
+		paichu->if_lei = 0;
+		(*map)[y][x].if_lei = 1;
+	}
+	init_bomb_near_block_num(map);
+}
+
+// 初始化雷边方格数字
+void Mine_clearance::init_bomb_near_block_num(vector<vector<Cell>>* map) {
+	// 遍历整个地图
+	for (int y = 0; y < map->size(); y++) {
+		for (int x = 0; x < (*map)[y].size(); x++) {
+			// 如果该方格上有雷
+			if ((*map)[y][x].if_lei) {
+				// 遍历该方块周围的八个方块
+				for (int i_y = 1; i_y >= -1; i_y--) {
+					for (int i_x = 1; i_x >= -1; i_x--) {
+						// 通过相对坐标计算出实际坐标
+						int index_y = y - i_y;
+						int index_x = x - i_x;
+						// 判断坐标是否在地图范围内，并且不是雷
+						if (!(i_y == 0 && i_x == 0) && index_y < this->CELL_COUNT_HIGHT && index_y >= 0 && index_x < this->CELL_COUNT_WIDTH && index_x >= 0 && (*map)[index_y][index_x].if_lei == 0) {
+							// 将此方格的周围雷数+1
+							(*map)[index_y][index_x].num += 1;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void Mine_clearance::show_map(vector<vector<Cell>>* map){
+	// 遍历整个地图
+	for (int y = 0; y < map->size(); y++) {
+		for (int x = 0; x < (*map)[y].size(); x++) {
+			if ((*map)[y][x].if_lei) {
+				cout << "# ";
+			}
+			else if ((*map)[y][x].num){
+				cout << (*map)[y][x].num << " ";
+			}
+			else {
+				cout << "  ";
+			}
+		}
+		cout << endl;
+	}
 }
 
 void Mine_clearance::start_game()
@@ -345,6 +436,7 @@ void Mine_clearance::start_game()
 	// 游戏主循环
 	int lei_count = this->BOMB_COUNT;
 	fps_limit* fps = new fps_limit(200);
+	bool first_left = true;
 	// 清空鼠标消息缓冲
 	FlushMouseMsgBuffer();
 	while (true)
@@ -364,6 +456,11 @@ void Mine_clearance::start_game()
 				if (msg.uMsg == WM_LBUTTONDOWN == cell->zhuangtai == 0)
 				{
 					cell->zhuangtai = 1;
+					if (first_left) {
+						init_Bomb(cell_map, cell);
+						show_map(cell_map);
+						first_left = false;
+					}
 				}
 				// 检测是否左键双击
 				if (msg.uMsg == WM_LBUTTONDBLCLK && cell->zhuangtai == 1) {

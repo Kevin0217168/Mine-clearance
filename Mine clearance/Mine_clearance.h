@@ -42,19 +42,35 @@ private:
 		// 方格上显示的数字，代表周围雷的数量
 		int num = 0;
 	};
+	void show_map(vector<vector<Cell>>* map);
 public:
 	Mine_clearance();
+	// Tchar转换为Char
 	void TcharToChar(const TCHAR*, char*);
+	// Char转换为Tchar
 	void CharToTchar(const char*, TCHAR*);
+	// char转换为TCHAR，支持中文
 	wchar_t* stringToTCHAR(const char*);
-	char* TCHARToString(LPCTSTR);
+	// 判断坐标是否落在方格范围内
 	inline bool if_pos_in_cell(int x, int y);
+	// 通过物理坐标二分查找对应的方块
 	inline Cell* choose(vector<vector<Cell>>* map, int x, int y);
+	// 生成从MIX到MIN的随机数
+	int randint(int min, int max);
+	// 洗牌算法
+	void shuffle(vector<int>* arr);
+	// 初始化雷边方格数字
+	void init_bomb_near_block_num(vector<vector<Cell>>* map);
+	// 初始化雷区 布雷算法
 	void init_Bomb(vector<vector<Cell>>* map, Cell* paichu);
+	// 绘制游戏开始界面
 	int draw_start();
+	// 设置游戏参数
 	void setting(int);
+	// 绘制游戏界面
 	void draw_game(time_t, int, vector<vector<Cell>>*);
-	//void draw_game(time_t, int, vector<vector<Cell>>*);
+	// 绘制游戏结束界面
 	void draw_gameover();
+	// 游戏开始入口函数
 	void start_game();
 };
