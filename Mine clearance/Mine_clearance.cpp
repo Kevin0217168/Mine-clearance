@@ -1,18 +1,34 @@
-#include "Mine_clearance.h"
+ï»¿#include "Mine_clearance.h"
+
+// å¼€å§‹ç•Œé¢èƒŒæ™¯é¢œè‰² æ¯”æµ…ç°è‰²å†æµ…ä¸€ç‚¹
+#define CHOOSE_BG_COLOR RGB(206, 214, 224) 
+// å¼€å§‹ç•Œé¢å¤§æ ‡é¢˜é¢œè‰² 
+#define CHOOSE_TITLE_COLOR RGB(83, 82, 237)
+// å¼€å§‹ç•Œé¢é€‰ä¸­æ—¶é¢œè‰²
+#define CHOOSE_SELECTED_COLOR RGB(55, 66, 250)
+// å¼€å§‹ç•Œé¢æœªé€‰ä¸­æ—¶é¢œè‰²
+#define CHOOSE_UNSELECTED_COLOR RGB(112, 161, 255)
+// æ¸¸æˆèƒŒæ™¯é¢œè‰² æµ…ç°è‰²
+#define GAME_BG_COLOR RGB(223, 228, 234)
+// æœªæ‰“å¼€æ–¹å—é¢œè‰² è“
+#define UNOPEND_BLOCK_COLOR RGB(55, 66, 250)
+// å·²æ‰“å¼€æ–¹å—é¢œè‰² æ¯”æµ…ç°è‰²å†æ·±ä¸€ç‚¹
+#define OPENED_BLOCK_COLOR RGB(223, 228, 234)
+// æ¸¸æˆé¡µé¢æ–‡å­—é¢œè‰²
+#define GAME_FONT_COLOR BLACK
 
 Mine_clearance::Mine_clearance()
 {
 }
 
-
-//½«TCHAR×ªÎªchar   
-//*tcharÊÇTCHARÀàĞÍÖ¸Õë£¬*_charÊÇcharÀàĞÍÖ¸Õë   
+//å°†TCHARè½¬ä¸ºchar   
+//*tcharæ˜¯TCHARç±»å‹æŒ‡é’ˆï¼Œ*_charæ˜¯charç±»å‹æŒ‡é’ˆ   
 void Mine_clearance::TcharToChar(const TCHAR* tchar, char* _char)
 {
 	int iLength;
-	//»ñÈ¡×Ö½Ú³¤¶È   
+	//è·å–å­—èŠ‚é•¿åº¦   
 	iLength = WideCharToMultiByte(CP_ACP, 0, tchar, -1, NULL, 0, NULL, NULL);
-	//½«tcharÖµ¸³¸ø_char
+	//å°†tcharå€¼èµ‹ç»™_char
 	WideCharToMultiByte(CP_ACP, 0, tchar, -1, _char, iLength, NULL, NULL);
 }
 
@@ -25,7 +41,7 @@ void Mine_clearance::CharToTchar(const char* _char, TCHAR* tchar)
 }
 
 // stringToTCHAR
-/* wBuf ÉêÃ÷ÎªÖ¸Õë¼´¿É¡£*/
+/* wBuf ç”³æ˜ä¸ºæŒ‡é’ˆå³å¯ã€‚*/
 wchar_t* Mine_clearance::stringToTCHAR(const char* buffer)
 {
 	size_t len = strlen(buffer);
@@ -52,31 +68,31 @@ wchar_t* AnsiCharToWide(char* pChar)
 int Mine_clearance::draw_start()
 {
 	int chage = NULL;
-	// ÎÄ¼ş²Ù×÷£¬´ò¿ª»º´æÎÄ¼ş
+	// æ–‡ä»¶æ“ä½œï¼Œæ‰“å¼€ç¼“å­˜æ–‡ä»¶
 	ifstream inFile("chage.dll", ios::in);
 	if (inFile)
 	{
-		// ÎÄ¼ş´ò¿ª³É¹¦
-		// ¶ÁÈ¡ÉÏ´ÎÑ¡ÔñĞÅÏ¢
+		// æ–‡ä»¶æ‰“å¼€æˆåŠŸ
+		// è¯»å–ä¸Šæ¬¡é€‰æ‹©ä¿¡æ¯
 		inFile >> chage;
 	}
 
-	// ³õÊ¼»¯»æÍ¼´°¿Ú
+	// åˆå§‹åŒ–ç»˜å›¾çª—å£
 	initgraph(500, 540, SHOWCONSOLE);
-	// »ñµÃ´°¿Ú¾ä±ú
+	// è·å¾—çª—å£å¥æŸ„
 	HWND hWnd = GetHWnd();
-	// Ê¹ÓÃ API º¯ÊıĞŞ¸Ä´°¿ÚÃû³Æ
+	// ä½¿ç”¨ API å‡½æ•°ä¿®æ”¹çª—å£åç§°
 	char s[] = "Mine clearance--Difficult to choose";
 	TCHAR a[36];
 	CharToTchar(s, a);
 	SetWindowText(hWnd, a);
 
-	// ÉèÖÃ±³¾°É«
-	setbkcolor(RGB(206, 214, 224));
+	// è®¾ç½®èƒŒæ™¯è‰²
+	setbkcolor(CHOOSE_BG_COLOR);
 
 	if (chage == NULL)
 	{
-		this->difficult_list[0] += "ÔİÎŞ";
+		this->difficult_list[0] += "æš‚æ— ";
 	}
 	else 
 	{
@@ -95,51 +111,53 @@ int Mine_clearance::draw_start()
 	int target = 0;
 	BeginBatchDraw();
 	while (true) {
-		// ±³¾°
-		setfillcolor(RGB(206, 214, 224));
+		// èƒŒæ™¯
+		setfillcolor(CHOOSE_BG_COLOR);
 		solidrectangle(0, 0, 500, 550);
 
-		// ±êÌâ
-		settextcolor(RGB(83, 82, 237));
-		settextstyle(80, 0, _T("Î¢ÈíÑÅºÚ"));
+		// æ ‡é¢˜
+		settextcolor(CHOOSE_TITLE_COLOR);
+		settextstyle(80, 0, _T("å¾®è½¯é›…é»‘"));
 		
-		drawtext(_T("É¨ À×"), &title_rect, DT_CENTER);
+		drawtext(_T("æ‰« é›·"), &title_rect, DT_CENTER);
 
-		// ÄÑ¶ÈÑ¡Ôñ
-		settextcolor(RGB(83, 82, 237));
-		settextstyle(40, 0, _T("Î¢ÈíÑÅºÚ"));
+		// éš¾åº¦é€‰æ‹©
+		settextcolor(CHOOSE_TITLE_COLOR);
+		settextstyle(40, 0, _T("å¾®è½¯é›…é»‘"));
 		
-		drawtext(_T("--- ÄÑ¶ÈÑ¡Ôñ ---"), &difficult_rect, DT_CENTER);
+		drawtext(_T("--- éš¾åº¦é€‰æ‹© ---"), &difficult_rect, DT_CENTER);
 
-		// »æÖÆÑ¡Ïî
-		settextstyle(30, 0, _T("Î¢ÈíÑÅºÚ"));
+		// ç»˜åˆ¶é€‰é¡¹
+		settextstyle(30, 0, _T("å¾®è½¯é›…é»‘"));
 		for (int i = 0; i < 5; i++) 
 		{
 			draw_choose.top += 50 * i;
 			draw_choose.bottom += 50 * i;
+			// é€‰æ‹©ä¸Šæ—¶
 			if (i == target)
 			{
-				settextcolor(RGB(55, 66, 250));
+				settextcolor(CHOOSE_SELECTED_COLOR);
 				drawtext(AnsiCharToWide((char*)(string(">>") + this->difficult_list[i]).data()), &draw_choose, DT_LEFT);
 			}
+			// æœªé€‰æ‹©ä¸Šæ—¶
 			else 
 			{
-				settextcolor(RGB(112, 161, 255));
+				settextcolor(CHOOSE_UNSELECTED_COLOR);
 				drawtext(AnsiCharToWide((char*)(string("  ") + this->difficult_list[i]).data()), &draw_choose, DT_LEFT);
 			}
 			draw_choose = choose_rect;
 		}
 
-		// »æÖÆËµÃ÷
-		settextcolor(RGB(83, 82, 237));
-		settextstyle(30, 0, _T("Î¢ÈíÑÅºÚ"));
-		drawtext(_T("¼üÅÌÉÏÏÂ¼üÑ¡ÔñÓÎÏ·ÄÑ¶È£¬¿Õ¸ñ»ò»Ø³µÈ·ÈÏ"), &note_rect, DT_LEFT);
+		// ç»˜åˆ¶è¯´æ˜
+		settextcolor(CHOOSE_TITLE_COLOR);
+		settextstyle(30, 0, _T("å¾®è½¯é›…é»‘"));
+		drawtext(_T("é”®ç›˜ä¸Šä¸‹é”®é€‰æ‹©æ¸¸æˆéš¾åº¦ï¼Œç©ºæ ¼æˆ–å›è½¦ç¡®è®¤"), &note_rect, DT_LEFT);
 
-		// ¼üÅÌÊÂ¼şÅĞ¶Ï
+		// é”®ç›˜äº‹ä»¶åˆ¤æ–­
 		if (_kbhit()) {
-			// °´ÏÂ¿Õ¸ñ¼ü¼ÌĞø
+			// æŒ‰ä¸‹ç©ºæ ¼é”®ç»§ç»­
 			ch = _getch();
-			// ÉÏ£º72£¬Ñ¡ÏîÉÏ·­
+			// ä¸Šï¼š72ï¼Œé€‰é¡¹ä¸Šç¿»
 			if (ch == 72) 
 			{
 				if (target != 0) 
@@ -147,14 +165,14 @@ int Mine_clearance::draw_start()
 					target -= 1;
 				}
 			}
-			// ÏÂ£º80£¬Ñ¡ÏîÏÂ·­
+			// ä¸‹ï¼š80ï¼Œé€‰é¡¹ä¸‹ç¿»
 			else if (ch == 80) {
 				if (target != 4)
 				{
 					target += 1;
 				}
 			}
-			// ¿Õ¸ñ¼ü£º32£¬È·¶¨
+			// ç©ºæ ¼é”®ï¼š32ï¼Œç¡®å®š
 			else if (ch == 32)
 			{
 				if (!(target == 0 && chage == NULL)) 
@@ -207,9 +225,9 @@ void Mine_clearance::setting(int target)
 		this->CELL = 20;
 		break;
 	default:
-		// ´Ë´¦ÏÔÊ¾ÓÎÏ·ËµÃ÷
-		// ...°ÍÀ­°ÍÀ­
-		// È»ºó·µ»Ø
+		// æ­¤å¤„æ˜¾ç¤ºæ¸¸æˆè¯´æ˜
+		// ...å·´æ‹‰å·´æ‹‰
+		// ç„¶åè¿”å›
 		draw_start();
 	}
 	this->HIGHT = 60 + this->CELL_COUNT_HIGHT * this->CELL + 10;
@@ -220,55 +238,72 @@ void Mine_clearance::draw_game(time_t start_seconds, int lei_count, vector<vecto
 {
 	BeginBatchDraw();
 
-	// »æÖÆ±³¾°
-	setfillcolor(RGB(206, 214, 224));
+	// ç»˜åˆ¶èƒŒæ™¯
+	setfillcolor(CHOOSE_BG_COLOR);
 	solidrectangle(0, 0, this->WIDTH, this->HIGHT);
 
-	// »æÖÆÓÎÏ·ÇøÓò¿ò
-	setfillcolor(BLACK);
+	// ç»˜åˆ¶æ¸¸æˆåŒºåŸŸæ¡†
+	setfillcolor(GAME_FONT_COLOR);
 	rectangle(10, 60, this->WIDTH - 10, this->HIGHT - 10);
 
-	// »æÖÆÓÎÏ·Ê±¼ä
-	settextcolor(BLACK);
-	settextstyle(30, 0, _T("Î¢ÈíÑÅºÚ"));
+	// ç»˜åˆ¶æ¸¸æˆæ—¶é—´
+	settextcolor(GAME_FONT_COLOR);
+	settextstyle(30, 0, _T("å¾®è½¯é›…é»‘"));
 	static RECT time_rect = { 20, 10, (this->WIDTH / 2) - 10, 40 };
 	long int sub_scoends = time(NULL) - start_seconds;
 	string minutes = to_string((int)(sub_scoends / 60));
 	string seconds = to_string(sub_scoends % 60);
-	drawtext(AnsiCharToWide((char*)(string("Ê±¼ä: ") + minutes + string(" : ") + seconds).data()), &time_rect, DT_LEFT);
+	drawtext(AnsiCharToWide((char*)(string("æ—¶é—´: ") + minutes + string(" : ") + seconds).data()), &time_rect, DT_LEFT);
 
-	// »æÖÆÓÎÏ·Ê£ÓàÀ×Êı
+	// ç»˜åˆ¶æ¸¸æˆå‰©ä½™é›·æ•°
 	static RECT lei_rect = { (this->WIDTH / 2) + 10, 10, this->WIDTH - 20, 40 };
-	drawtext(AnsiCharToWide((char*)(string("Ê£ÓàÀ×Êı: ") + to_string(lei_count)).data()), &lei_rect, DT_RIGHT);
+	drawtext(AnsiCharToWide((char*)(string("å‰©ä½™é›·æ•°: ") + to_string(lei_count)).data()), &lei_rect, DT_RIGHT);
 
-	// »æÖÆÓÎÏ·µØÍ¼
+	// ç»˜åˆ¶æ¸¸æˆåœ°å›¾
 	setlinestyle(PS_SOLID | PS_JOIN_BEVEL, 1);
 	for (vector<vector<Cell>>::iterator y_it = cell_map->begin(); y_it < cell_map->end(); ++y_it)
 	{
 		for (vector<Cell>::iterator x_it = y_it->begin(); x_it < y_it->end(); ++x_it) 
 		{
-			if (x_it->zhuangtai)
+			if (x_it->zhuangtai != 0)
 			{
-				if (x_it->if_lei) {
-					setfillcolor(RED);
-				}else{
-					// ÉèÖÃÒÑ´ò¿ªÌî³äÉ«
-					setfillcolor(RGB(223, 228, 234));
+				switch (x_it->zhuangtai)
+				{
+				case 1:
+					if (x_it->if_lei){
+						// é›·
+						setfillcolor(RED);
+					}
+					else {
+						// è®¾ç½®å·²æ‰“å¼€å¡«å……è‰²
+						setfillcolor(OPENED_BLOCK_COLOR);
+					}
+					break;
+				case 2:
+					// æ’æ——
+					setfillcolor(BLUE);
+					break;
+				case 3:
+					// ç–‘é—®
+					setfillcolor(GREEN);
+					break;
+				default:
+					break;
 				}
 			}
 			else 
 			{
-				// ÉèÖÃÎ´´ò¿ªÌî³äÉ«
-				setfillcolor(RGB(55, 66, 250));
+				// è®¾ç½®æœªæ‰“å¼€å¡«å……è‰²
+				setfillcolor(UNOPEND_BLOCK_COLOR);
 			}
 			fillrectangle(x_it->pos[0], x_it->pos[1], x_it->pos[0] + this->CELL, x_it->pos[1] + this->CELL);
-			// »æÖÆÖÜÎ§À×ÊıÁ¿
-			if (x_it->zhuangtai && x_it->num)
+			// ç»˜åˆ¶å‘¨å›´é›·æ•°é‡
+			if (x_it->zhuangtai == 1 && x_it->num)
 			{
-				// ÉèÖÃ±³¾°É«
-				setbkcolor(RGB(223, 228, 234));
+				// è®¾ç½®èƒŒæ™¯è‰²
+				setbkcolor(GAME_BG_COLOR);
 				settextcolor(BLUE);
-				settextstyle(this->CELL / 2 + 8, 0, _T("Î¢ÈíÑÅºÚ"));
+				settextstyle(this->CELL / 2 + 8, 0, _T("å¾®è½¯é›…é»‘"));
 				TCHAR s[2];
 				CharToTchar(to_string(x_it->num).data(), s);
 				RECT num_rect = { x_it->pos[0] + 2, x_it->pos[1] + 2, x_it->pos[0] + this->CELL - 2, x_it->pos[1] + this->CELL - 2 };
@@ -279,6 +314,7 @@ void Mine_clearance::draw_game(time_t start_seconds, int lei_count, vector<vecto
 	EndBatchDraw();
 }
 
+// åˆ¤æ–­åæ ‡æ˜¯å¦è½åœ¨æ–¹æ ¼èŒƒå›´å†…
 inline bool Mine_clearance::if_pos_in_cell(int x, int y) {
 	if (x > 10 && x < this->WIDTH - 10) {
 		if (y > 60 && y < this->HIGHT - 10) {
@@ -288,8 +324,9 @@ inline bool Mine_clearance::if_pos_in_cell(int x, int y) {
 	return false;
 }
 
+// é€šè¿‡ç‰©ç†åæ ‡äºŒåˆ†æŸ¥æ‰¾å¯¹åº”çš„æ–¹å—
 inline Mine_clearance::Cell* Mine_clearance::choose(vector<vector<Cell>>* map, int x, int y) {
-	// Ã¿ĞĞ²éÕÒ
+	// æ¯è¡ŒæŸ¥æ‰¾
 	int max = map->size()-1;
 	int min = 0;
 	int index;
@@ -305,7 +342,7 @@ inline Mine_clearance::Cell* Mine_clearance::choose(vector<vector<Cell>>* map, i
 			min = index + 1;
 		}
 	}
-	// Ã¿ÁĞ²éÕÒ
+	// æ¯åˆ—æŸ¥æ‰¾
 	max = (*map)[index].size() - 1;
 	min = 0;
 	int x_index = 0;
@@ -323,30 +360,33 @@ inline Mine_clearance::Cell* Mine_clearance::choose(vector<vector<Cell>>* map, i
 	}
 }
 
-// Éú³É´ÓMIXµ½MINµÄËæ»úÊı
-int Mine_clearance::randint(int min, int max)
-{
-	return (rand() % (max - min + 1)) + min;
+// ç”Ÿæˆä»MIXåˆ°MINçš„éšæœºæ•°(ä¸åŒ…å«MAX)
+int Mine_clearance::randint(int beg, int end) {
+	srand(time(NULL));
+	return (rand() % (end - beg)) + beg;
 }
 
-// Ï´ÅÆËã·¨
-void Mine_clearance::shuffle(vector<int>* arr) {
-	int m = arr->size(), t, i;
-	while (m) {
-		i = randint(0, m--);
-		t = (*arr)[m];
-		(*arr)[m] = (*arr)[i];
-		(*arr)[i] = t;
+// æ´—ç‰Œç®—æ³•
+void Mine_clearance::shuffle(vector<int>* arr)
+{
+	for (int i = arr->size() - 1; i >= 0; --i)
+	{
+		srand((unsigned)time(NULL));
+		swap((*arr)[rand() % (i + 1)], (*arr)[i]);
 	}
 }
 
-// ³õÊ¼»¯À×Çø
+// åˆå§‹åŒ–é›·åŒº
 void Mine_clearance::init_Bomb(vector<vector<Cell>>* map, Cell* paichu) {
+	// åˆ›å»ºä¸€ä¸ªä¸åœ°å›¾æ•°é‡ä¸€è‡´çš„ä¸€ç»´æ•°ç»„ï¼Œç”¨äºå¸ƒé›·
 	vector<int>* bomb_list = new vector<int>(this->CELL_COUNT_HIGHT * this->CELL_COUNT_WIDTH);
+	// å°†å¾…å¸ƒçš„é›·éƒ½æ”¾åœ¨æ•°ç»„å‰
 	for (int index = 0; index < this->BOMB_COUNT; index++) {
 		(*bomb_list)[index] = 1;
 	}
+	// æ‰“ä¹±æ•°ç»„å®ç°å¸ƒé›·
 	shuffle(bomb_list);
+	// å°†åˆ†å¥½é›·çš„ä¸€ç»´æ•°ç»„åŸ‹è¿›äºŒç»´æ•°ç»„é‡Œ
 	for (int y = 0; y < map->size(); y++) {
 		for (int x = 0; x < (*map)[y].size(); x++) {
 			if ((*bomb_list)[y * this->CELL_COUNT_WIDTH + x]) {
@@ -355,6 +395,7 @@ void Mine_clearance::init_Bomb(vector<vector<Cell>>* map, Cell* paichu) {
 		}
 	}
 	delete bomb_list;
+	// æ’é™¤ç”¨æˆ·ç‚¹ä¸‹çš„æ–¹å—ä¸€ä¸ªæ–¹å—å†…çš„é›·
 	if (paichu->if_lei) {
 		int x, y;
 		do {
@@ -364,25 +405,26 @@ void Mine_clearance::init_Bomb(vector<vector<Cell>>* map, Cell* paichu) {
 		paichu->if_lei = 0;
 		(*map)[y][x].if_lei = 1;
 	}
+	// éå†æ‰€æœ‰éé›·æ–¹å—ï¼Œä¸ºæ–¹å—å¡«ä¸Šæ•°å­—
 	init_bomb_near_block_num(map);
 }
 
-// ³õÊ¼»¯À×±ß·½¸ñÊı×Ö
+// åˆå§‹åŒ–é›·è¾¹æ–¹æ ¼æ•°å­—
 void Mine_clearance::init_bomb_near_block_num(vector<vector<Cell>>* map) {
-	// ±éÀúÕû¸öµØÍ¼
+	// éå†æ•´ä¸ªåœ°å›¾
 	for (int y = 0; y < map->size(); y++) {
 		for (int x = 0; x < (*map)[y].size(); x++) {
-			// Èç¹û¸Ã·½¸ñÉÏÓĞÀ×
+			// å¦‚æœè¯¥æ–¹æ ¼ä¸Šæœ‰é›·
 			if ((*map)[y][x].if_lei) {
-				// ±éÀú¸Ã·½¿éÖÜÎ§µÄ°Ë¸ö·½¿é
+				// éå†è¯¥æ–¹å—å‘¨å›´çš„å…«ä¸ªæ–¹å—
 				for (int i_y = 1; i_y >= -1; i_y--) {
 					for (int i_x = 1; i_x >= -1; i_x--) {
-						// Í¨¹ıÏà¶Ô×ø±ê¼ÆËã³öÊµ¼Ê×ø±ê
+						// é€šè¿‡ç›¸å¯¹åæ ‡è®¡ç®—å‡ºå®é™…åæ ‡
 						int index_y = y - i_y;
 						int index_x = x - i_x;
-						// ÅĞ¶Ï×ø±êÊÇ·ñÔÚµØÍ¼·¶Î§ÄÚ£¬²¢ÇÒ²»ÊÇÀ×
+						// åˆ¤æ–­åæ ‡æ˜¯å¦åœ¨åœ°å›¾èŒƒå›´å†…ï¼Œå¹¶ä¸”ä¸æ˜¯é›·
 						if (!(i_y == 0 && i_x == 0) && index_y < this->CELL_COUNT_HIGHT && index_y >= 0 && index_x < this->CELL_COUNT_WIDTH && index_x >= 0 && (*map)[index_y][index_x].if_lei == 0) {
-							// ½«´Ë·½¸ñµÄÖÜÎ§À×Êı+1
+							// å°†æ­¤æ–¹æ ¼çš„å‘¨å›´é›·æ•°+1
 							(*map)[index_y][index_x].num += 1;
 						}
 					}
@@ -392,8 +434,28 @@ void Mine_clearance::init_bomb_near_block_num(vector<vector<Cell>>* map) {
 	}
 }
 
+// é€’å½’æ‰“å¼€å‘¨å›´æ ¼å­
+void Mine_clearance::click_near_block(vector<vector<Cell>>* map, int y_b, int x_b) {
+	
+	if ((*map)[y_b][x_b].num != 0 || (*map)[y_b][x_b].zhuangtai == 1) {
+		(*map)[y_b][x_b].zhuangtai = 1;
+		return;
+	}
+	(*map)[y_b][x_b].zhuangtai = 1;
+	for (int y = 1; y >= -1; y--) {
+		for (int x = 1; x >= -1; x--) {
+			int index_x = x_b - x;
+			int index_y = y_b - y;
+			// åˆ¤æ–­åæ ‡æ˜¯å¦åœ¨åœ°å›¾èŒƒå›´å†…
+			if (!(y == 0 && x == 0) && index_y < this->CELL_COUNT_HIGHT && index_y >= 0 && index_x < this->CELL_COUNT_WIDTH && index_x >= 0) {
+				click_near_block(map, index_y, index_x);
+			}
+		}
+	}
+}
+
 void Mine_clearance::show_map(vector<vector<Cell>>* map){
-	// ±éÀúÕû¸öµØÍ¼
+	// éå†æ•´ä¸ªåœ°å›¾
 	for (int y = 0; y < map->size(); y++) {
 		for (int x = 0; x < (*map)[y].size(); x++) {
 			if ((*map)[y][x].if_lei) {
@@ -414,16 +476,16 @@ void Mine_clearance::start_game()
 {
 	time_t start_seconds;
 	start_seconds = time(NULL);
-	// ³õÊ¼»¯»æÍ¼´°¿Ú
+	// åˆå§‹åŒ–ç»˜å›¾çª—å£
 	initgraph(this->WIDTH, this->HIGHT, SHOWCONSOLE);
 
-	// ÉèÖÃ±³¾°É«
-	setbkcolor(RGB(206, 214, 224));
+	// è®¾ç½®èƒŒæ™¯è‰²
+	setbkcolor(GAME_BG_COLOR);
 
-	// ¹¹½¨ÓÎÏ·µØÍ¼
+	// æ„å»ºæ¸¸æˆåœ°å›¾
 	vector<vector<Cell>>* cell_map = new vector<vector<Cell>>(this->CELL_COUNT_HIGHT, vector<Cell>(this->CELL_COUNT_WIDTH));
 	cout << sizeof(*cell_map) << endl;
-	// ³õÊ¼»¯ÓÎÏ·µØÍ¼
+	// åˆå§‹åŒ–æ¸¸æˆåœ°å›¾
 	for (int y = 0; y < this->CELL_COUNT_HIGHT; y++) 
 	{
 		for (int x = 0; x < this->CELL_COUNT_WIDTH; x++) 
@@ -433,47 +495,59 @@ void Mine_clearance::start_game()
 		}
 	}
 
-	// ÓÎÏ·Ö÷Ñ­»·
+	// æ¸¸æˆä¸»å¾ªç¯
 	int lei_count = this->BOMB_COUNT;
 	fps_limit* fps = new fps_limit(200);
 	bool first_left = true;
-	// Çå¿ÕÊó±êÏûÏ¢»º³å
+	// æ¸…ç©ºé¼ æ ‡æ¶ˆæ¯ç¼“å†²
 	FlushMouseMsgBuffer();
 	while (true)
 	{
+		// ç»˜åˆ¶æ¸¸æˆç•Œé¢å¹¶åˆ·æ–°
 		draw_game(start_seconds, lei_count, cell_map);
 
-		// Êó±êÊÂ¼ş¼ì²â
+		// é¼ æ ‡äº‹ä»¶æ£€æµ‹
 		if (MouseHit()) 
 		{
-			// »ñÈ¡Êó±êÏûÏ¢
+			// è·å–é¼ æ ‡æ¶ˆæ¯
 			MOUSEMSG msg = GetMouseMsg();
-			// ¼ì²âÊÇ·ñÔÚ·½¸ñ·¶Î§ÄÚ
+			// æ£€æµ‹æ˜¯å¦åœ¨æ–¹æ ¼èŒƒå›´å†…
 			if (if_pos_in_cell(msg.x, msg.y))
 			{
+				// é€šè¿‡åæ ‡æŸ¥æ‰¾å‡ºæ–¹å—å¯¹è±¡
 				Cell* cell = choose(cell_map, msg.x, msg.y);
-				// ¼ì²âÊÇ·ñ×ó¼üµ¥»÷
-				if (msg.uMsg == WM_LBUTTONDOWN == cell->zhuangtai == 0)
+				// æ£€æµ‹æ˜¯å¦å·¦é”®å•å‡»
+				if (msg.uMsg == WM_LBUTTONDOWN && cell->zhuangtai == 0)
 				{
-					cell->zhuangtai = 1;
+					// å¦‚æœä¸ºç¬¬ä¸€æ¬¡ç‚¹å¼€æ–¹å—ï¼Œåˆ™å¼€å§‹å¸ƒé›·
 					if (first_left) {
 						init_Bomb(cell_map, cell);
 						show_map(cell_map);
 						first_left = false;
 					}
+					// ç‚¹å‡»æ­¤æ–¹å—ï¼Œå¹¶é€’å½’æŸ¥æ‰¾å‘¨å›´å¯æ‰“å¼€çš„æ–¹å—æ‰“å¼€
+					click_near_block(cell_map, (int)((cell->pos[1] - 60) / this->CELL), (int)((cell->pos[0] - 10) / this->CELL));
 				}
-				// ¼ì²âÊÇ·ñ×ó¼üË«»÷
+				// æ£€æµ‹æ˜¯å¦å·¦é”®åŒå‡»
 				if (msg.uMsg == WM_LBUTTONDBLCLK && cell->zhuangtai == 1) {
 					cout << "double click!" << endl;
+					click_near_block(cell_map, (int)((cell->pos[1] - 60) / this->CELL), (int)((cell->pos[0] - 10) / this->CELL));
 				}
-				// ¼ì²âÊÇ·ñ°´ÏÂÓÒ¼ü
-				else if (msg.mkRButton) {
-
+				// æ£€æµ‹æ˜¯å¦æŒ‰ä¸‹å³é”®ï¼Œå¹¶ä¸”è¯¥æ–¹å—æœªå¼€å¯
+				else if (msg.uMsg == WM_RBUTTONDOWN && cell->zhuangtai != 1) {
+					// è¿›è¡Œæ’æ——åŠ¨ä½œ
+					cell->zhuangtai += 1;
+					if (cell->zhuangtai == 1) {
+						cell->zhuangtai += 1;
+					}
+					else if (cell->zhuangtai == 4) {
+						cell->zhuangtai = 0;
+					}
 				}
 			}
 			
 		}
-
+		// æ§åˆ¶Fps
 		fps->delay();
 	}
 	delete fps;

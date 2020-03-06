@@ -1,14 +1,14 @@
-#include <iostream>
+#include <iostream>        // 标准输入输出
 #include <graphics.h>      // 引用图形库头文件
-#include <conio.h>
-#include <string>
-#include <tchar.h>
-#include <stdlib.h>
-#include <string>
-#include <fstream>
-#include <ctime>
-#include <vector>
-#include "Fps.h"
+#include <conio.h>         // 键盘事件获取
+#include <string>          // 字符串操作
+#include <tchar.h>         // GuI字符串
+#include <stdlib.h>        // C语言内存库
+#include <fstream>         // 文件输入输出
+#include <ctime>           // C时间库
+#include <vector>          // 动态数组库
+#include "Fps.h"           // 自制FPS控制类
+#include <algorithm>       // 算法库
 
 using namespace std;
 
@@ -44,6 +44,7 @@ private:
 	};
 	void show_map(vector<vector<Cell>>* map);
 public:
+	// 构造函数
 	Mine_clearance();
 	// Tchar转换为Char
 	void TcharToChar(const TCHAR*, char*);
@@ -63,6 +64,8 @@ public:
 	void init_bomb_near_block_num(vector<vector<Cell>>* map);
 	// 初始化雷区 布雷算法
 	void init_Bomb(vector<vector<Cell>>* map, Cell* paichu);
+	// 递归打开周围格子
+	void click_near_block(vector<vector<Cell>>* map, int y_b, int x_b);
 	// 绘制游戏开始界面
 	int draw_start();
 	// 设置游戏参数
