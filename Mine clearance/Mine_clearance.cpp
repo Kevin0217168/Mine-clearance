@@ -51,14 +51,15 @@ wchar_t* Mine_clearance::stringToTCHAR(const char* buffer)
 	return wBuf;
 }
 
-wchar_t* AnsiCharToWide(char* pChar)
+// 支持中文转换
+wchar_t* Mine_clearance::AnsiCharToWide(char* pChar)
 {
 	if (!pChar) return NULL;
 	wchar_t* pszBuf = NULL;
 	int needWChar = MultiByteToWideChar(CP_ACP, 0, pChar, -1, NULL, 0);
 	if (needWChar > 0) {
-		pszBuf = new wchar_t[needWChar + 1];
-		ZeroMemory(pszBuf, (needWChar + 1) * sizeof(wchar_t));
+		pszBuf = new wchar_t[(long int)needWChar + 1];
+		ZeroMemory(pszBuf, ((long int)needWChar + 1) * sizeof(wchar_t));
 		MultiByteToWideChar(CP_ACP, 0, pChar, -1, pszBuf, needWChar);
 	}
 
@@ -173,7 +174,7 @@ int Mine_clearance::draw_start()
 				}
 			}
 			// 空格键：32，确定
-			else if (ch == 32)
+			else if (ch == 32 || ch == 13)
 			{
 				if (!(target == 0 && chage == NULL)) 
 				{
@@ -204,9 +205,9 @@ void Mine_clearance::setting(int target)
 	switch (target)
 	{
 	case 1:
-		this->CELL_COUNT_WIDTH = 10;
-		this->CELL_COUNT_HIGHT = 10;
-		this->CELL_COUNT = 100;
+		this->CELL_COUNT_WIDTH = 9;
+		this->CELL_COUNT_HIGHT = 9;
+		this->CELL_COUNT = 81;
 		this->BOMB_COUNT = 10;
 		this->CELL = 30;
 		break;
@@ -232,6 +233,18 @@ void Mine_clearance::setting(int target)
 	}
 	this->HIGHT = 60 + this->CELL_COUNT_HIGHT * this->CELL + 10;
 	this->WIDTH = 20 + this->CELL_COUNT_WIDTH * this->CELL;
+	this->CELL_UNOPENED_COUNT = CELL_COUNT;
+}
+
+void Mine_clearance::user_setting(int W_count, int H_count, int B_count, int cell_size) {
+	this->CELL_COUNT_WIDTH = W_count;
+	this->CELL_COUNT_HIGHT = H_count;
+	this->CELL_COUNT = this->CELL_COUNT_WIDTH * this->CELL_COUNT_HIGHT;
+	this->BOMB_COUNT = B_count;
+	this->CELL = cell_size;
+	this->HIGHT = 60 + this->CELL_COUNT_HIGHT * this->CELL + 10;
+	this->WIDTH = 20 + this->CELL_COUNT_WIDTH * this->CELL;
+	this->CELL_UNOPENED_COUNT = CELL_COUNT;
 }
 
 void Mine_clearance::draw_game(time_t start_seconds, int lei_count, vector<vector<Cell>>* cell_map)
@@ -247,16 +260,18 @@ void Mine_clearance::draw_game(time_t start_seconds, int lei_count, vector<vecto
 	rectangle(10, 60, this->WIDTH - 10, this->HIGHT - 10);
 
 	// 绘制游戏时间
+	// 设置背景色
+	setbkcolor(CHOOSE_BG_COLOR);
 	settextcolor(GAME_FONT_COLOR);
 	settextstyle(30, 0, _T("微软雅黑"));
-	static RECT time_rect = { 20, 10, (this->WIDTH / 2) - 10, 40 };
+	static RECT time_rect = { 10, 10, (this->WIDTH / 2) - 10, 40 };
 	long int sub_scoends = time(NULL) - start_seconds;
 	string minutes = to_string((int)(sub_scoends / 60));
 	string seconds = to_string(sub_scoends % 60);
 	drawtext(AnsiCharToWide((char*)(string("时间: ") + minutes + string(" : ") + seconds).data()), &time_rect, DT_LEFT);
 
 	// 绘制游戏剩余雷数
-	static RECT lei_rect = { (this->WIDTH / 2) + 10, 10, this->WIDTH - 20, 40 };
+	static RECT lei_rect = { (this->WIDTH / 2), 10, this->WIDTH - 10, 40 };
 	drawtext(AnsiCharToWide((char*)(string("剩余雷数: ") + to_string(lei_count)).data()), &lei_rect, DT_RIGHT);
 
 	// 绘制游戏地图
@@ -301,9 +316,32 @@ void Mine_clearance::draw_game(time_t start_seconds, int lei_count, vector<vecto
 			if (x_it->zhuangtai == 1 && x_it->num)
 			{
 				// 设置背景色
-				setbkcolor(GAME_BG_COLOR);
-				settextcolor(BLUE);
-				settextstyle(this->CELL / 2 + 8, 0, _T("微软雅黑"));
+				setbkcolor(OPENED_BLOCK_COLOR);
+				switch (x_it->num)
+				{
+				case 1:
+					settextcolor(BLUE);
+					break;
+				case 2:
+					settextcolor(GREEN);
+					break;
+				case 3:
+					settextcolor(RED);
+					break;
+				case 4:
+					settextcolor(BLUE);
+					break;
+				case 5:
+					settextcolor(RED);
+					break;
+				case 6:
+					settextcolor(RED);
+					break;
+				default:
+					settextcolor(RED);
+					break;
+				}
+				settextstyle(this->CELL / 2 + 10, 0, _T("微软雅黑"));
 				TCHAR s[2];
 				CharToTchar(to_string(x_it->num).data(), s);
 				RECT num_rect = { x_it->pos[0] + 2, x_it->pos[1] + 2, x_it->pos[0] + this->CELL - 2, x_it->pos[1] + this->CELL - 2 };
@@ -377,15 +415,17 @@ void Mine_clearance::shuffle(vector<int>* arr)
 }
 
 // 初始化雷区
-void Mine_clearance::init_Bomb(vector<vector<Cell>>* map, Cell* paichu) {
+void Mine_clearance::init_Bomb(vector<vector<Cell>>* map, int y_b, int x_b) {
 	// 创建一个与地图数量一致的一维数组，用于布雷
-	vector<int>* bomb_list = new vector<int>(this->CELL_COUNT_HIGHT * this->CELL_COUNT_WIDTH);
+	vector<int>* bomb_list = new vector<int>(((long int)this->CELL_COUNT_HIGHT) * this->CELL_COUNT_WIDTH);
 	// 将待布的雷都放在数组前
 	for (int index = 0; index < this->BOMB_COUNT; index++) {
 		(*bomb_list)[index] = 1;
 	}
-	// 打乱数组实现布雷
-	shuffle(bomb_list);
+	for (int i = 0; i < this->CELL_UNOPENED_COUNT / 20; i++) {
+		// 打乱数组实现布雷
+		shuffle(bomb_list);
+	}
 	// 将分好雷的一维数组埋进二维数组里
 	for (int y = 0; y < map->size(); y++) {
 		for (int x = 0; x < (*map)[y].size(); x++) {
@@ -395,15 +435,24 @@ void Mine_clearance::init_Bomb(vector<vector<Cell>>* map, Cell* paichu) {
 		}
 	}
 	delete bomb_list;
-	// 排除用户点下的方块一个方块内的雷
-	if (paichu->if_lei) {
-		int x, y;
-		do {
-			x = randint(0, this->CELL_COUNT_WIDTH);
-			y = randint(0, this->CELL_COUNT_HIGHT);
-		} while ((*map)[y][x].if_lei);
-		paichu->if_lei = 0;
-		(*map)[y][x].if_lei = 1;
+	// 排除用户点下的方块九个方块内的雷
+	for (int i_y = 1; i_y >= -1; i_y--) {
+		for (int i_x = 1; i_x >= -1; i_x--) {
+			// 通过相对坐标计算出实际坐标
+			int index_y = y_b - i_y;
+			int index_x = x_b - i_x;
+			// 判断坐标是否在地图范围内，并且是雷
+			if (index_y < this->CELL_COUNT_HIGHT && index_y >= 0 && index_x < this->CELL_COUNT_WIDTH && index_x >= 0 && (*map)[index_y][index_x].if_lei) {
+				// 转移雷
+				int x, y;
+				do {
+					x = randint(0, this->CELL_COUNT_WIDTH);
+					y = randint(0, this->CELL_COUNT_HIGHT);
+				} while ((*map)[y][x].if_lei);
+				(*map)[index_y][index_x].if_lei = 0;
+				(*map)[y][x].if_lei = 1;
+			}
+		}
 	}
 	// 遍历所有非雷方块，为方块填上数字
 	init_bomb_near_block_num(map);
@@ -435,13 +484,30 @@ void Mine_clearance::init_bomb_near_block_num(vector<vector<Cell>>* map) {
 }
 
 // 递归打开周围格子
-void Mine_clearance::click_near_block(vector<vector<Cell>>* map, int y_b, int x_b) {
-	
-	if ((*map)[y_b][x_b].num != 0 || (*map)[y_b][x_b].zhuangtai == 1) {
+void Mine_clearance::click_near_block(vector<vector<Cell>>* map, int y_b, int x_b, bool double_click = false) {
+	if (!double_click) {
+		if ((*map)[y_b][x_b].zhuangtai == 2 || (*map)[y_b][x_b].zhuangtai == 1) {
+			return;
+		}
+		else if ((*map)[y_b][x_b].num != 0) {
+			(*map)[y_b][x_b].zhuangtai = 1;
+			this->CELL_UNOPENED_COUNT -= 1;
+			return;
+		}
+		else if ((*map)[y_b][x_b].if_lei == 1) {
+			// 遍历整个地图
+			for (int y = 0; y < map->size(); y++) {
+				for (int x = 0; x < (*map)[y].size(); x++) {
+					if ((*map)[y][x].if_lei == 1) {
+						(*map)[y][x].zhuangtai = 1;
+					}
+				}
+			}
+			this->FAILED_BOOL = true;
+		}
 		(*map)[y_b][x_b].zhuangtai = 1;
-		return;
+		this->CELL_UNOPENED_COUNT -= 1;
 	}
-	(*map)[y_b][x_b].zhuangtai = 1;
 	for (int y = 1; y >= -1; y--) {
 		for (int x = 1; x >= -1; x--) {
 			int index_x = x_b - x;
@@ -472,10 +538,9 @@ void Mine_clearance::show_map(vector<vector<Cell>>* map){
 	}
 }
 
-void Mine_clearance::start_game()
+int Mine_clearance::start_game()
 {
-	time_t start_seconds;
-	start_seconds = time(NULL);
+	time_t start_seconds = time(NULL);
 	// 初始化绘图窗口
 	initgraph(this->WIDTH, this->HIGHT, SHOWCONSOLE);
 
@@ -504,6 +569,9 @@ void Mine_clearance::start_game()
 	while (true)
 	{
 		// 绘制游戏界面并刷新
+		if (first_left) {
+			start_seconds = time(NULL);
+		}
 		draw_game(start_seconds, lei_count, cell_map);
 
 		// 鼠标事件检测
@@ -516,22 +584,40 @@ void Mine_clearance::start_game()
 			{
 				// 通过坐标查找出方块对象
 				Cell* cell = choose(cell_map, msg.x, msg.y);
+				int y_b = (int)((cell->pos[1] - 60) / this->CELL);
+				int x_b = (int)((cell->pos[0] - 10) / this->CELL);
 				// 检测是否左键单击
 				if (msg.uMsg == WM_LBUTTONDOWN && cell->zhuangtai == 0)
 				{
 					// 如果为第一次点开方块，则开始布雷
 					if (first_left) {
-						init_Bomb(cell_map, cell);
+						init_Bomb(cell_map, y_b, x_b);
 						show_map(cell_map);
 						first_left = false;
+						start_seconds = time(NULL);
 					}
 					// 点击此方块，并递归查找周围可打开的方块打开
-					click_near_block(cell_map, (int)((cell->pos[1] - 60) / this->CELL), (int)((cell->pos[0] - 10) / this->CELL));
+					click_near_block(cell_map, y_b, x_b);
 				}
 				// 检测是否左键双击
 				if (msg.uMsg == WM_LBUTTONDBLCLK && cell->zhuangtai == 1) {
 					cout << "double click!" << endl;
-					click_near_block(cell_map, (int)((cell->pos[1] - 60) / this->CELL), (int)((cell->pos[0] - 10) / this->CELL));
+					int qi = 0;
+					for (int y = 1; y >= -1; y--) {
+						for (int x = 1; x >= -1; x--) {
+							int index_x = x_b - x;
+							int index_y = y_b - y;
+							// 判断坐标是否在地图范围内
+							if (!(y == 0 && x == 0) && index_y < this->CELL_COUNT_HIGHT && index_y >= 0 && index_x < this->CELL_COUNT_WIDTH && index_x >= 0) {
+								if ((*cell_map)[index_y][index_x].zhuangtai == 2) {
+									qi += 1;
+								}
+							}
+						}
+					}
+					if (qi == cell->num) {
+						click_near_block(cell_map, y_b, x_b, true);
+					}
 				}
 				// 检测是否按下右键，并且该方块未开启
 				else if (msg.uMsg == WM_RBUTTONDOWN && cell->zhuangtai != 1) {
@@ -543,12 +629,134 @@ void Mine_clearance::start_game()
 					else if (cell->zhuangtai == 4) {
 						cell->zhuangtai = 0;
 					}
+					if (cell->zhuangtai == 2) {
+						lei_count -= 1;
+					}
+					else if (cell->zhuangtai - 1 == 2) {
+						lei_count += 1;
+					}
+				}
+				// 检查游戏胜利条件
+				if (this->BOMB_COUNT == this->CELL_UNOPENED_COUNT) {
+					draw_game(start_seconds, lei_count, cell_map);
+					break;
+				}
+				// 检查游戏失败条件
+				else if (this->FAILED_BOOL) {
+					draw_game(start_seconds, lei_count, cell_map);
+					break;
 				}
 			}
-			
 		}
 		// 控制Fps
 		fps->delay();
 	}
 	delete fps;
+
+	// 格式化游戏时间字符串
+	int game_time = time(NULL) - start_seconds;
+	string minutes = to_string((int)(game_time / 60));
+	string seconds = to_string(game_time % 60);
+	TCHAR* time_str = AnsiCharToWide((char*)(string("游戏用时: ") + minutes + string(" : ") + seconds).data());
+	// 格式化地图大小字符串
+	TCHAR* ditu_str = AnsiCharToWide((char*)(string("地图大小: ") + to_string(this->CELL_COUNT_HIGHT) + string("*") + to_string(this->CELL_COUNT_WIDTH)).data());
+	// 格式化雷数字符串
+	TCHAR* leishu_str = AnsiCharToWide((char*)(string("总雷数: ") + to_string(this->BOMB_COUNT)).data());
+	// 格式化剩余雷数字符串
+	TCHAR* shengyu_str;
+	if (this->BOMB_COUNT == this->CELL_UNOPENED_COUNT) {
+		shengyu_str = AnsiCharToWide((char*)(string("剩余雷数: 0").data()));
+	}
+	else {
+		shengyu_str = AnsiCharToWide((char*)(string("剩余雷数: ") + to_string(lei_count)).data());
+	}
+	
+
+	// 休眠一秒，给用户反应时间
+	Sleep(1000);
+	// 关闭绘图窗口
+	closegraph();
+	// 判断输赢，进入相关的绘制函数
+	this->draw_Gameover(time_str, ditu_str, leishu_str, shengyu_str, this->FAILED_BOOL);
+	return !this->FAILED_BOOL;
+}
+
+// 绘制游戏胜利界面
+void Mine_clearance::draw_Gameover(TCHAR* game_time, TCHAR* ditu_str, TCHAR* leishu_str, TCHAR* shengyu_str, bool failed)
+{
+	// 初始化绘图窗口
+	initgraph(500, 540, SHOWCONSOLE);
+	// 获得窗口句柄
+	HWND hWnd = GetHWnd();
+	// 使用 API 函数修改窗口名称
+	char s[] = "Mine clearance--Gameover";
+	TCHAR a[36];
+	CharToTchar(s, a);
+	SetWindowText(hWnd, a);
+
+	// 格式化时间
+
+	// 设置背景色
+	setbkcolor(CHOOSE_BG_COLOR);
+
+	static RECT title_rect =   { 80, 50, 420, 130 };
+	static RECT xiangxi_rect = { 20, 150, 480, 200 };
+	static RECT time_rect =    { 100, 220, 480, 260 };
+	static RECT shengyu_rect = { 100, 280, 480, 320 };
+	static RECT ditu_rect =    { 100, 340, 480, 380 };
+	static RECT leishu_rect =  { 100, 400, 480, 440 };
+	static RECT xinxi_rect =   { 20, 500, 480, 530 };
+
+	fps_limit* fps1 = new fps_limit(60);
+	BeginBatchDraw();
+	while (true) {
+		// 背景
+		setfillcolor(CHOOSE_BG_COLOR);
+		solidrectangle(0, 0, 500, 540);
+
+		// 标题
+		settextstyle(80, 0, _T("微软雅黑"));
+		if (failed) {
+			settextcolor(RED);
+			drawtext(_T("失 败"), &title_rect, DT_CENTER);
+		}
+		else {
+			settextcolor(CHOOSE_TITLE_COLOR);
+			drawtext(_T("胜 利"), &title_rect, DT_CENTER);
+		}
+		
+		// 详细信息
+		settextstyle(50, 0, _T("微软雅黑"));
+		drawtext(_T("---详细信息---"), &xiangxi_rect, DT_CENTER);
+		// 游戏用时
+		settextcolor(RGB(47, 53, 66));
+		settextstyle(40, 0, _T("微软雅黑"));
+		drawtext(game_time, &time_rect, DT_LEFT);
+		// 剩余雷数
+		drawtext(shengyu_str, &shengyu_rect, DT_LEFT);
+		// 地图大小
+		drawtext(ditu_str, &ditu_rect, DT_LEFT);
+		// 雷数
+		drawtext(leishu_str, &leishu_rect, DT_LEFT);
+
+		// 底部信息
+		settextcolor(CHOOSE_UNSELECTED_COLOR);
+		settextstyle(30, 0, _T("微软雅黑"));
+		drawtext(_T("空格键或Enter键返回主界面"), &xinxi_rect, DT_RIGHT);
+
+		// 键盘事件判断
+		if (_kbhit()) {
+			// 按下空格键继续
+			int ch = _getch();
+			// 空格键：32，确定
+			if (ch == 32 || ch == 13){
+				return;
+			}
+		}
+
+		FlushBatchDraw();
+		fps1->delay();
+	}
+	delete fps1;
+	EndBatchDraw();
 }
