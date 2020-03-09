@@ -583,9 +583,12 @@ int Mine_clearance::start_game()
 			if (if_pos_in_cell(msg.x, msg.y))
 			{
 				// 通过坐标查找出方块对象
-				Cell* cell = choose(cell_map, msg.x, msg.y);
-				int y_b = (int)((cell->pos[1] - 60) / this->CELL);
-				int x_b = (int)((cell->pos[0] - 10) / this->CELL);
+				//Cell* cell = choose(cell_map, msg.x, msg.y);
+				//int y_b = (int)((cell->pos[1] - 70) / this->CELL);
+				//int x_b = (int)((cell->pos[0] - 20) / this->CELL);
+				int y_b = (int)((msg.y - 60) / this->CELL);
+				int x_b = (int)((msg.x - 10) / this->CELL);
+				Cell* cell = &(*cell_map)[y_b][x_b];
 				// 检测是否左键单击
 				if (msg.uMsg == WM_LBUTTONDOWN && cell->zhuangtai == 0)
 				{
