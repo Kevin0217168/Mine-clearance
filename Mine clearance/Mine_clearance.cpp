@@ -79,7 +79,7 @@ int Mine_clearance::draw_start()
 	}
 
 	// 初始化绘图窗口
-	initgraph(500, 540, SHOWCONSOLE);
+	initgraph(500, 540);
 	// 获得窗口句柄
 	HWND hWnd = GetHWnd();
 	// 使用 API 函数修改窗口名称
@@ -93,7 +93,7 @@ int Mine_clearance::draw_start()
 
 	if (chage == NULL)
 	{
-		this->difficult_list[0] += "暂无";
+		this->difficult_list[0] += " 暂无";
 	}
 	else 
 	{
@@ -542,7 +542,7 @@ int Mine_clearance::start_game()
 {
 	time_t start_seconds = time(NULL);
 	// 初始化绘图窗口
-	initgraph(this->WIDTH, this->HIGHT, SHOWCONSOLE);
+	initgraph(this->WIDTH, this->HIGHT);
 
 	// 设置背景色
 	setbkcolor(GAME_BG_COLOR);
@@ -562,7 +562,7 @@ int Mine_clearance::start_game()
 
 	// 游戏主循环
 	int lei_count = this->BOMB_COUNT;
-	fps_limit* fps = new fps_limit(200);
+	fps_limit* fps = new fps_limit(100);
 	bool first_left = true;
 	// 清空鼠标消息缓冲
 	FlushMouseMsgBuffer();
@@ -685,7 +685,7 @@ int Mine_clearance::start_game()
 void Mine_clearance::draw_Gameover(TCHAR* game_time, TCHAR* ditu_str, TCHAR* leishu_str, TCHAR* shengyu_str, bool failed)
 {
 	// 初始化绘图窗口
-	initgraph(500, 540, SHOWCONSOLE);
+	initgraph(500, 540);
 	// 获得窗口句柄
 	HWND hWnd = GetHWnd();
 	// 使用 API 函数修改窗口名称
