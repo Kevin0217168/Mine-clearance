@@ -562,17 +562,21 @@ int Mine_clearance::start_game()
 
 	// 游戏主循环
 	int lei_count = this->BOMB_COUNT;
-	fps_limit* fps = new fps_limit(100);
+	int delay = 0;
+	fps_limit* fps = new fps_limit(400);
 	bool first_left = true;
 	// 清空鼠标消息缓冲
 	FlushMouseMsgBuffer();
 	while (true)
 	{
-		// 绘制游戏界面并刷新
-		if (first_left) {
-			start_seconds = time(NULL);
+		delay += 1;
+		if (delay % 20 == 0) {
+			// 绘制游戏界面并刷新
+			if (first_left) {
+				start_seconds = time(NULL);
+			}
+			draw_game(start_seconds, lei_count, cell_map);
 		}
-		draw_game(start_seconds, lei_count, cell_map);
 
 		// 鼠标事件检测
 		if (MouseHit()) 
@@ -653,6 +657,9 @@ int Mine_clearance::start_game()
 		}
 		// 控制Fps
 		fps->delay();
+		if (delay == 400) {
+			delay = 0;
+		}
 	}
 	delete fps;
 
